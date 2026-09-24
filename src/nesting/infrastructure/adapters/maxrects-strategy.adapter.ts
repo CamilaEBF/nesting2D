@@ -1,13 +1,13 @@
 /**
  * @file maxrects-strategy.adapter.ts
- * @description Adaptador de infraestructura que implementa el puerto NestingStrategy
- * utilizando la librería `maxrects-packer`.
+ * @description Infrastructure adapter implementing the NestingStrategy port
+ * using the `maxrects-packer` library.
  *
- * Este adaptador traduce los modelos de dominio al formato que espera la librería
- * y convierte los resultados de vuelta a modelos de dominio.
+ * This adapter translates domain models to the format expected by the library
+ * and converts the results back to domain models.
  *
- * Capa: Infraestructura (Adaptador de salida)
- * Patrón: Adapter / Strategy
+ * Layer: Infrastructure (Output Adapter)
+ * Pattern: Adapter / Strategy
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -16,17 +16,17 @@ import type { Canvas, Piece, NestingResult, PlacedPiece } from '../../domain/ent
 import type { NestingStrategy } from '../../domain/interfaces/nesting-strategy.interface.js';
 
 /**
- * Datos personalizados que se adjuntan a cada rectángulo del packer.
- * Permite rastrear la pieza original después del empaquetado.
+ * Custom data attached to each packer rectangle.
+ * Allows tracking the original piece after packing.
  */
 interface RectData {
-  /** ID original de la pieza de dominio */
+  /** Original domain piece ID */
   pieceId: string;
-  /** Ancho original de la pieza (antes de posible rotación) */
+  /** Original piece width (before possible rotation) */
   originalWidth: number;
-  /** Alto original de la pieza (antes de posible rotación) */
+  /** Original piece height (before possible rotation) */
   originalHeight: number;
-  /** Si la pieza permite rotación */
+  /** Whether the piece allows rotation */
   allowRotation: boolean;
 }
 
@@ -35,55 +35,55 @@ export class MaxRectsStrategyAdapter implements NestingStrategy {
   private readonly logger = new Logger(MaxRectsStrategyAdapter.name);
 
   /**
-   * Ejecuta el algoritmo MaxRects para empaquetar piezas en un lienzo.
+   * Executes the MaxRects algorithm to pack pieces on a canvas.
    *
-   * Flujo:
-   * 1. Configura el MaxRectsPacker con las dimensiones del lienzo.
-   * 2. Agrega todas las piezas como rectángulos con metadata.
-   * 3. Extrae los resultados del primer bin (solo usamos 1 lienzo).
-   * 4. Calcula el porcentaje de uso y detecta piezas no ubicadas.
+   * Flow:
+   * 1. Configures the MaxRectsPacker with canvas dimensions.
+   * 2. Adds all pieces as rectangles with metadata.
+   * 3. Extracts results from the first bin (we only use 1 canvas).
+   * 4. Calculates usage percentage and detects unplaced pieces.
    *
-   * @param canvas - Dimensiones del lienzo de corte.
-   * @param pieces - Piezas individuales (ya expandidas, cantidad = 1).
-   * @returns Resultado del empaquetado con distribución y métricas.
+   * @param canvas - Cutting canvas dimensions.
+   * @param pieces - Individual pieces (already expanded, quantity = 1).
+   * @returns Packing result with distribution and metrics.
    */
   calculate(canvas: Canvas, pieces: Piece[]): NestingResult {
     this.logger.log(
-      `MaxRects: empaquetando ${pieces.length} piezas en lienzo ${canvas.ancho}x${canvas.alto}`,
+      `MaxRects: packing ${pieces.length} pieces on ${canvas.width}x${canvas.height} canvas`,
     );
 
-    // ─── Configurar el packer ────────────────────────────────────
+    // ─── Configure the packer ────────────────────────────────────
     const packer = new MaxRectsPacker<IRectangle>(
-      canvas.ancho,
-      canvas.alto,
-      0, // padding entre piezas
+      canvas.width,
+      canvas.height,
+      0, // padding between pieces
       {
-        smart: true,       // Dimensionado inteligente del bin
-        pot: false,         // NO usar potencia de 2 (es para texturas, no cortes)
-        square: false,      // NO forzar cuadrado
-        allowRotation: false, // Rotación se controla por pieza individual
+        smart: true,        // Smart bin sizing
+        pot: false,          // Do NOT use power of 2 (that's for textures, not cuts)
+        square: false,       // Do NOT force square
+        allowRotation: false, // Rotation is controlled per individual piece
       },
     );
 
-    // ─── Preparar los rectángulos con metadata ───────────────────
+    // ─── Prepare rectangles with metadata ────────────────────────
     const inputRects: IRectangle[] = pieces.map(piece => ({
-      width: piece.ancho,
-      height: piece.alto,
+      width: piece.width,
+      height: piece.height,
       x: 0,
       y: 0,
-      allowRotation: piece.permitirRotacion,
+      allowRotation: piece.allowRotation,
       data: {
         pieceId: piece.id,
-        originalWidth: piece.ancho,
-        originalHeight: piece.alto,
-        allowRotation: piece.permitirRotacion,
+        originalWidth: piece.width,
+        originalHeight: piece.height,
+        allowRotation: piece.allowRotation,
       } satisfies RectData,
     }));
 
-    // ─── Ejecutar el empaquetado ─────────────────────────────────
+    // ─── Execute packing ─────────────────────────────────────────
     packer.addArray(inputRects);
 
-    // ─── Extraer resultados ──────────────────────────────────────
+    // ─── Extract results ─────────────────────────────────────────
     const placedPieces: PlacedPiece[] = [];
     const allPlacedIds = new Set<string>();
 
@@ -93,27 +93,27 @@ export class MaxRectsStrategyAdapter implements NestingStrategy {
         const isRotated = !!(rect as any).rot;
 
         placedPieces.push({
-          idPieza: data.pieceId,
+          pieceId: data.pieceId,
           x: rect.x,
           y: rect.y,
-          rotada: isRotated,
-          anchoFinal: rect.width,
-          altoFinal: rect.height,
+          rotated: isRotated,
+          finalWidth: rect.width,
+          finalHeight: rect.height,
         });
 
         allPlacedIds.add(data.pieceId);
       }
     }
 
-    // ─── Identificar piezas no ubicadas ──────────────────────────
-    const piezasNoUbicadas = pieces
+    // ─── Identify unplaced pieces ────────────────────────────────
+    const unplacedPieces = pieces
       .filter(p => !allPlacedIds.has(p.id))
       .map(p => p.id);
 
-    // ─── Calcular porcentaje de uso ──────────────────────────────
-    const totalCanvasArea = canvas.ancho * canvas.alto;
+    // ─── Calculate usage percentage ──────────────────────────────
+    const totalCanvasArea = canvas.width * canvas.height;
     const usedArea = placedPieces.reduce(
-      (sum, p) => sum + p.anchoFinal * p.altoFinal,
+      (sum, p) => sum + p.finalWidth * p.finalHeight,
       0,
     );
     const usagePercentage = totalCanvasArea > 0
@@ -121,15 +121,15 @@ export class MaxRectsStrategyAdapter implements NestingStrategy {
       : '0.0';
 
     this.logger.log(
-      `MaxRects completado: ${placedPieces.length}/${pieces.length} piezas ubicadas, ` +
-      `uso: ${usagePercentage}%`,
+      `MaxRects complete: ${placedPieces.length}/${pieces.length} pieces placed, ` +
+      `usage: ${usagePercentage}%`,
     );
 
     return {
-      lienzoUtilizado: { ancho: canvas.ancho, alto: canvas.alto },
-      porcentajeUso: usagePercentage,
-      distribucion: placedPieces,
-      piezasNoUbicadas,
+      canvasUsed: { width: canvas.width, height: canvas.height },
+      usagePercentage,
+      distribution: placedPieces,
+      unplacedPieces,
     };
   }
 }

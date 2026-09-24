@@ -1,12 +1,12 @@
 /**
  * @file nesting.controller.ts
- * @description Controlador HTTP para el módulo Nesting.
+ * @description HTTP controller for the Nesting module.
  *
- * Actúa como adaptador de entrada (Driving Adapter) en la Arquitectura Hexagonal.
- * Recibe las solicitudes HTTP, valida los DTOs, delega al caso de uso,
- * y formatea la respuesta según el contrato de la API.
+ * Acts as an input adapter (Driving Adapter) in the Hexagonal Architecture.
+ * Receives HTTP requests, validates DTOs, delegates to the use case,
+ * and formats the response according to the API contract.
  *
- * Capa: Infraestructura (Adaptador de entrada HTTP)
+ * Layer: Infrastructure (HTTP input adapter)
  */
 
 import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes, ValidationPipe } from '@nestjs/common';
@@ -15,7 +15,7 @@ import { NestingRequestDto } from './dto/nesting-request.dto.js';
 import type { Canvas, Piece, NestingResult } from '../../domain/entities/nesting-models.js';
 
 /**
- * Estructura de la respuesta exitosa de la API.
+ * Successful API response structure.
  */
 interface NestingApiResponse {
   status: 'success';
@@ -23,9 +23,9 @@ interface NestingApiResponse {
 }
 
 /**
- * Controlador HTTP para el endpoint de nesting.
+ * HTTP controller for the nesting endpoint.
  *
- * Ruta base: /api/v1/nesting
+ * Base route: /api/v1/nesting
  * Endpoint: POST /api/v1/nesting/calculate
  */
 @Controller('api/v1/nesting')
@@ -35,49 +35,49 @@ export class NestingController {
   ) {}
 
   /**
-   * Calcula la distribución óptima de piezas sobre un lienzo.
+   * Calculates the optimal distribution of pieces on a canvas.
    *
-   * @param dto - Datos validados de la solicitud (lienzo + piezas).
-   * @returns Respuesta con la distribución calculada y métricas.
+   * @param dto - Validated request data (canvas + pieces).
+   * @returns Response with the calculated distribution and metrics.
    *
    * @example
    * POST /api/v1/nesting/calculate
    * {
-   *   "lienzo": { "ancho": 1500, "alto": 1000 },
-   *   "piezas": [
-   *     { "id": "p1", "ancho": 200, "alto": 300, "cantidad": 2, "permitirRotacion": true }
+   *   "canvas": { "width": 1500, "height": 1000 },
+   *   "pieces": [
+   *     { "id": "p1", "width": 200, "height": 300, "quantity": 2, "allowRotation": true }
    *   ]
    * }
    */
   @Post('calculate')
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({
-    whitelist: true,             // Elimina propiedades no decoradas
-    forbidNonWhitelisted: true,  // Error si envían propiedades desconocidas
-    transform: true,             // Transforma el payload a instancias de las clases DTO
+    whitelist: true,             // Strip non-decorated properties
+    forbidNonWhitelisted: true,  // Error on unknown properties
+    transform: true,             // Transform payload to DTO class instances
     transformOptions: {
-      enableImplicitConversion: true, // Permite conversión de tipos implícita
+      enableImplicitConversion: true, // Allow implicit type conversion
     },
   }))
   calculate(@Body() dto: NestingRequestDto): NestingApiResponse {
-    // ─── Mapear DTO → Modelos de Dominio ─────────────────────────
+    // ─── Map DTO → Domain Models ─────────────────────────────────
     const canvas: Canvas = {
-      ancho: dto.lienzo.ancho,
-      alto: dto.lienzo.alto,
+      width: dto.canvas.width,
+      height: dto.canvas.height,
     };
 
-    const pieces: Piece[] = dto.piezas.map(p => ({
+    const pieces: Piece[] = dto.pieces.map(p => ({
       id: p.id,
-      ancho: p.ancho,
-      alto: p.alto,
-      cantidad: p.cantidad,
-      permitirRotacion: p.permitirRotacion,
+      width: p.width,
+      height: p.height,
+      quantity: p.quantity,
+      allowRotation: p.allowRotation,
     }));
 
-    // ─── Ejecutar Caso de Uso ────────────────────────────────────
+    // ─── Execute Use Case ────────────────────────────────────────
     const result = this.calculateNestingUseCase.execute(canvas, pieces);
 
-    // ─── Formatear Respuesta ─────────────────────────────────────
+    // ─── Format Response ─────────────────────────────────────────
     return {
       status: 'success',
       data: result,

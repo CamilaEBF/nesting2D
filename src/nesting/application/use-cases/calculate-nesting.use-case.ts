@@ -1,14 +1,14 @@
 /**
  * @file calculate-nesting.use-case.ts
- * @description Caso de Uso principal del módulo Nesting.
+ * @description Main Use Case for the Nesting module.
  *
- * Orquesta la lógica de negocio para el cálculo de empaquetado 2D:
- * 1. Expansión de piezas por cantidad.
- * 2. Clasificación de piezas (detección de "fuelles").
- * 3. Delegación al motor de empaquetado vía Strategy Pattern.
+ * Orchestrates the business logic for 2D packing calculation:
+ * 1. Piece expansion by quantity.
+ * 2. Piece classification (bellows detection).
+ * 3. Delegation to the packing engine via Strategy Pattern.
  *
- * Capa: Aplicación (Application Layer)
- * Dependencias: Solo depende de interfaces del dominio (Puerto NestingStrategy).
+ * Layer: Application (Application Layer)
+ * Dependencies: Only depends on domain interfaces (NestingStrategy Port).
  */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -16,8 +16,8 @@ import type { Canvas, Piece, NestingResult, ClassifiedPiece, PieceClassification
 import { NESTING_STRATEGY_TOKEN, type NestingStrategy } from '../../domain/interfaces/nesting-strategy.interface.js';
 
 /**
- * Umbral de relación de aspecto para clasificar una pieza como "fuelle".
- * Si max(ancho, alto) / min(ancho, alto) > ASPECT_RATIO_THRESHOLD, la pieza es un fuelle.
+ * Aspect ratio threshold for classifying a piece as "bellows".
+ * If max(width, height) / min(width, height) > ASPECT_RATIO_THRESHOLD, the piece is a bellows.
  */
 const ASPECT_RATIO_THRESHOLD = 5;
 
@@ -27,94 +27,94 @@ export class CalculateNestingUseCase {
 
   constructor(
     /**
-     * Inyección del motor de empaquetado a través del puerto (Strategy Pattern).
-     * La implementación concreta se resuelve en el módulo NestJS.
+     * Packing engine injection through the port (Strategy Pattern).
+     * The concrete implementation is resolved in the NestJS module.
      */
     @Inject(NESTING_STRATEGY_TOKEN)
     private readonly nestingStrategy: NestingStrategy,
   ) {}
 
   /**
-   * Ejecuta el cálculo completo de nesting 2D.
+   * Executes the full 2D nesting calculation.
    *
-   * Flujo:
-   * 1. Expande las piezas según su cantidad (ej: cantidad=3 → 3 instancias).
-   * 2. Clasifica cada pieza (regular o fuelle) basándose en su relación de aspecto.
-   * 3. Delega al motor de empaquetado vía el puerto NestingStrategy.
+   * Flow:
+   * 1. Expands pieces by their quantity (e.g., quantity=3 → 3 instances).
+   * 2. Classifies each piece (regular or bellows) based on its aspect ratio.
+   * 3. Delegates to the packing engine via the NestingStrategy port.
    *
-   * @param canvas - Dimensiones del lienzo de corte.
-   * @param pieces - Piezas originales con sus cantidades.
-   * @returns Resultado del empaquetado con distribución y métricas.
+   * @param canvas - Cutting canvas dimensions.
+   * @param pieces - Original pieces with their quantities.
+   * @returns Packing result with distribution and metrics.
    */
   execute(canvas: Canvas, pieces: Piece[]): NestingResult {
     this.logger.log(
-      `Iniciando cálculo de nesting: lienzo ${canvas.ancho}x${canvas.alto}, ` +
-      `${pieces.length} tipo(s) de pieza`,
+      `Starting nesting calculation: canvas ${canvas.width}x${canvas.height}, ` +
+      `${pieces.length} piece type(s)`,
     );
 
-    // ─── Paso 1: Expandir piezas por cantidad ────────────────────
+    // ─── Step 1: Expand pieces by quantity ────────────────────────
     const expandedPieces = this.expandPiecesByQuantity(pieces);
-    this.logger.log(`Piezas expandidas: ${expandedPieces.length} unidades totales`);
+    this.logger.log(`Expanded pieces: ${expandedPieces.length} total units`);
 
-    // ─── Paso 2: Clasificar piezas (detección de fuelles) ────────
-    // CLASIFICACIÓN DE FUELLES:
-    // Una pieza es un "fuelle" (tira larga) si su relación de aspecto
-    // (dimensión mayor / dimensión menor) es > 5.
-    // En esta iteración, todas las piezas se envían juntas al motor,
-    // pero la clasificación queda preparada para futuras optimizaciones
-    // donde los fuelles podrían procesarse con estrategias diferentes.
+    // ─── Step 2: Classify pieces (bellows detection) ─────────────
+    // BELLOWS CLASSIFICATION:
+    // A piece is a "bellows" (long strip) if its aspect ratio
+    // (larger dimension / smaller dimension) is > 5.
+    // In this iteration, all pieces are sent together to the engine,
+    // but the classification is prepared for future optimizations
+    // where bellows could be processed with different strategies.
     const classifiedPieces = this.classifyPieces(expandedPieces);
 
-    const fuelles = classifiedPieces.filter(p => p.clasificacion === 'fuelle');
-    const regulares = classifiedPieces.filter(p => p.clasificacion === 'regular');
+    const bellows = classifiedPieces.filter(p => p.classification === 'bellows');
+    const regulars = classifiedPieces.filter(p => p.classification === 'regular');
 
     this.logger.log(
-      `Clasificación: ${regulares.length} regulares, ${fuelles.length} fuelles ` +
-      `(umbral ratio > ${ASPECT_RATIO_THRESHOLD})`,
+      `Classification: ${regulars.length} regular, ${bellows.length} bellows ` +
+      `(threshold ratio > ${ASPECT_RATIO_THRESHOLD})`,
     );
 
-    // ─── Paso 3: Delegar al motor de empaquetado ─────────────────
-    // NOTA: En esta iteración, todas las piezas (fuelles + regulares)
-    // se envían juntas al motor. En iteraciones futuras, los fuelles
-    // podrían procesarse con un algoritmo especializado (e.g., Guillotine)
-    // antes de enviar las regulares al MaxRects.
+    // ─── Step 3: Delegate to packing engine ──────────────────────
+    // NOTE: In this iteration, all pieces (bellows + regular) are
+    // sent together to the engine. In future iterations, bellows
+    // could be processed with a specialized algorithm (e.g., Guillotine)
+    // before sending regular pieces to MaxRects.
     const allPieces: Piece[] = classifiedPieces.map(cp => ({
       id: cp.id,
-      ancho: cp.ancho,
-      alto: cp.alto,
-      cantidad: 1, // Ya están expandidas
-      permitirRotacion: cp.permitirRotacion,
+      width: cp.width,
+      height: cp.height,
+      quantity: 1, // Already expanded
+      allowRotation: cp.allowRotation,
     }));
 
     const result = this.nestingStrategy.calculate(canvas, allPieces);
 
     this.logger.log(
-      `Resultado: ${result.distribucion.length} piezas ubicadas, ` +
-      `${result.piezasNoUbicadas.length} no ubicadas, ` +
-      `uso del lienzo: ${result.porcentajeUso}%`,
+      `Result: ${result.distribution.length} pieces placed, ` +
+      `${result.unplacedPieces.length} unplaced, ` +
+      `canvas usage: ${result.usagePercentage}%`,
     );
 
     return result;
   }
 
   /**
-   * Expande las piezas según su campo `cantidad`.
-   * Cada copia recibe un sufijo único en su ID (ej: "p1_1", "p1_2").
+   * Expands pieces by their `quantity` field.
+   * Each copy receives a unique suffix in its ID (e.g., "p1_1", "p1_2").
    *
-   * @param pieces - Piezas con cantidad >= 1.
-   * @returns Array de piezas individuales (cantidad = 1 cada una).
+   * @param pieces - Pieces with quantity >= 1.
+   * @returns Array of individual pieces (quantity = 1 each).
    */
   private expandPiecesByQuantity(pieces: Piece[]): Piece[] {
     const expanded: Piece[] = [];
 
     for (const piece of pieces) {
-      for (let i = 0; i < piece.cantidad; i++) {
+      for (let i = 0; i < piece.quantity; i++) {
         expanded.push({
-          id: piece.cantidad > 1 ? `${piece.id}_${i + 1}` : piece.id,
-          ancho: piece.ancho,
-          alto: piece.alto,
-          cantidad: 1,
-          permitirRotacion: piece.permitirRotacion,
+          id: piece.quantity > 1 ? `${piece.id}_${i + 1}` : piece.id,
+          width: piece.width,
+          height: piece.height,
+          quantity: 1,
+          allowRotation: piece.allowRotation,
         });
       }
     }
@@ -123,28 +123,28 @@ export class CalculateNestingUseCase {
   }
 
   /**
-   * Clasifica las piezas según su geometría.
+   * Classifies pieces based on their geometry.
    *
-   * Regla de negocio:
-   * - Una pieza es un "fuelle" si max(ancho, alto) / min(ancho, alto) > 5.
-   * - Caso contrario, es "regular".
+   * Business rule:
+   * - A piece is a "bellows" if max(width, height) / min(width, height) > 5.
+   * - Otherwise, it is "regular".
    *
-   * @param pieces - Piezas expandidas (cantidad = 1).
-   * @returns Piezas enriquecidas con información de clasificación.
+   * @param pieces - Expanded pieces (quantity = 1).
+   * @returns Pieces enriched with classification information.
    */
   private classifyPieces(pieces: Piece[]): ClassifiedPiece[] {
     return pieces.map(piece => {
-      const maxDimension = Math.max(piece.ancho, piece.alto);
-      const minDimension = Math.min(piece.ancho, piece.alto);
-      const aspectRatio = minDimension > 0 ? maxDimension / minDimension : Infinity;
+      const maxDimension = Math.max(piece.width, piece.height);
+      const minDimension = Math.min(piece.width, piece.height);
+      const ratio = minDimension > 0 ? maxDimension / minDimension : Infinity;
 
       const classification: PieceClassification =
-        aspectRatio > ASPECT_RATIO_THRESHOLD ? 'fuelle' : 'regular';
+        ratio > ASPECT_RATIO_THRESHOLD ? 'bellows' : 'regular';
 
       return {
         ...piece,
-        clasificacion: classification,
-        relacionAspecto: parseFloat(aspectRatio.toFixed(2)),
+        classification,
+        aspectRatio: parseFloat(ratio.toFixed(2)),
       };
     });
   }

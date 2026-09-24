@@ -1,104 +1,104 @@
 /**
  * @file nesting-models.ts
- * @description Modelos de dominio puros para el sistema de Nesting 2D.
+ * @description Pure domain models for the 2D Nesting system.
  *
- * Estos modelos representan las entidades del dominio sin dependencias
- * de frameworks ni infraestructura. Son objetos de valor inmutables
- * (Value Objects) que encapsulan la información del negocio.
+ * These models represent domain entities with no dependencies on
+ * frameworks or infrastructure. They are immutable Value Objects
+ * that encapsulate core business information.
  *
- * Principio: Independencia del dominio (capa más interna de la Arquitectura Hexagonal).
+ * Principle: Domain independence (innermost layer of Hexagonal Architecture).
  */
 
 // ─────────────────────────────────────────────────────────────
-// Entidades de Entrada
+// Input Entities
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Representa la superficie de corte (el material base).
- * Contiene las dimensiones del lienzo donde se ubicarán las piezas.
+ * Represents the cutting surface (base material).
+ * Contains the dimensions of the canvas where pieces will be placed.
  */
 export interface Canvas {
-  /** Ancho del lienzo en unidades (mm, px, etc.) */
-  readonly ancho: number;
-  /** Alto del lienzo en unidades (mm, px, etc.) */
-  readonly alto: number;
+  /** Canvas width in units (mm, px, etc.) */
+  readonly width: number;
+  /** Canvas height in units (mm, px, etc.) */
+  readonly height: number;
 }
 
 /**
- * Representa una pieza individual a ubicar sobre el lienzo.
- * Cada pieza tiene un identificador único, dimensiones, y opciones de corte.
+ * Represents an individual piece to be placed on the canvas.
+ * Each piece has a unique identifier, dimensions, and cutting options.
  */
 export interface Piece {
-  /** Identificador único de la pieza */
+  /** Unique piece identifier */
   readonly id: string;
-  /** Ancho de la pieza en unidades */
-  readonly ancho: number;
-  /** Alto de la pieza en unidades */
-  readonly alto: number;
-  /** Cantidad de copias requeridas de esta pieza */
-  readonly cantidad: number;
-  /** Indica si la pieza puede rotarse 90° para optimizar el empaquetado */
-  readonly permitirRotacion: boolean;
+  /** Piece width in units */
+  readonly width: number;
+  /** Piece height in units */
+  readonly height: number;
+  /** Number of required copies of this piece */
+  readonly quantity: number;
+  /** Whether the piece can be rotated 90° to optimize packing */
+  readonly allowRotation: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────
-// Entidades de Salida
+// Output Entities
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Representa la ubicación calculada de una pieza individual sobre el lienzo.
- * Indica las coordenadas exactas y si fue rotada.
+ * Represents the calculated placement of a single piece on the canvas.
+ * Indicates exact coordinates and whether it was rotated.
  */
 export interface PlacedPiece {
-  /** Referencia al ID original de la pieza */
-  readonly idPieza: string;
-  /** Coordenada X de la esquina superior-izquierda en el lienzo */
+  /** Reference to the original piece ID */
+  readonly pieceId: string;
+  /** X coordinate of the top-left corner on the canvas */
   readonly x: number;
-  /** Coordenada Y de la esquina superior-izquierda en el lienzo */
+  /** Y coordinate of the top-left corner on the canvas */
   readonly y: number;
-  /** Indica si la pieza fue rotada 90° durante el empaquetado */
-  readonly rotada: boolean;
-  /** Ancho final de la pieza (puede diferir del original si fue rotada) */
-  readonly anchoFinal: number;
-  /** Alto final de la pieza (puede diferir del original si fue rotada) */
-  readonly altoFinal: number;
+  /** Whether the piece was rotated 90° during packing */
+  readonly rotated: boolean;
+  /** Final piece width (may differ from original if rotated) */
+  readonly finalWidth: number;
+  /** Final piece height (may differ from original if rotated) */
+  readonly finalHeight: number;
 }
 
 /**
- * Resultado completo del algoritmo de empaquetado.
- * Contiene la distribución de piezas ubicadas, las no ubicadas, y métricas de eficiencia.
+ * Complete result of the packing algorithm.
+ * Contains the distribution of placed pieces, unplaced pieces, and efficiency metrics.
  */
 export interface NestingResult {
-  /** Dimensiones del lienzo utilizado */
-  readonly lienzoUtilizado: Canvas;
-  /** Porcentaje de uso del área del lienzo (0-100), formateado como string con 1 decimal */
-  readonly porcentajeUso: string;
-  /** Lista de piezas ubicadas exitosamente con sus coordenadas */
-  readonly distribucion: PlacedPiece[];
-  /** Lista de IDs de piezas que no pudieron ser ubicadas en el lienzo */
-  readonly piezasNoUbicadas: string[];
+  /** Dimensions of the canvas used */
+  readonly canvasUsed: Canvas;
+  /** Canvas area usage percentage (0-100), formatted as a string with 1 decimal */
+  readonly usagePercentage: string;
+  /** List of successfully placed pieces with their coordinates */
+  readonly distribution: PlacedPiece[];
+  /** List of piece IDs that could not be placed on the canvas */
+  readonly unplacedPieces: string[];
 }
 
 // ─────────────────────────────────────────────────────────────
-// Entidades auxiliares de dominio
+// Auxiliary Domain Entities
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Tipo de clasificación de una pieza según su geometría.
- * Se utiliza en la lógica de pre-procesamiento del caso de uso.
+ * Classification type for a piece based on its geometry.
+ * Used in the use case's pre-processing logic.
  *
- * - 'fuelle': Pieza con relación de aspecto > 5 (tira larga/delgada)
- * - 'regular': Pieza con relación de aspecto <= 5
+ * - 'bellows': Piece with aspect ratio > 5 (long/thin strip)
+ * - 'regular': Piece with aspect ratio <= 5
  */
-export type PieceClassification = 'fuelle' | 'regular';
+export type PieceClassification = 'bellows' | 'regular';
 
 /**
- * Pieza enriquecida con metadatos de clasificación.
- * Se genera durante el pre-procesamiento del caso de uso.
+ * Piece enriched with classification metadata.
+ * Generated during use case pre-processing.
  */
 export interface ClassifiedPiece extends Piece {
-  /** Clasificación geométrica de la pieza */
-  readonly clasificacion: PieceClassification;
-  /** Relación de aspecto calculada (mayor dimensión / menor dimensión) */
-  readonly relacionAspecto: number;
+  /** Geometric classification of the piece */
+  readonly classification: PieceClassification;
+  /** Calculated aspect ratio (larger dimension / smaller dimension) */
+  readonly aspectRatio: number;
 }

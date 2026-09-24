@@ -1,44 +1,44 @@
-# ✂️ Nesting 2D API - Motor de Optimización de Cortes
+# ✂️ Nesting 2D API - Cut Optimization Engine
 
 ![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 
-API RESTful desarrollada en **Node.js** y **NestJS** para resolver problemas de *2D Bin Packing* (Nesting) aplicados a la marroquinería y la industria textil. Calcula la distribución óptima de moldes rectangulares sobre un lienzo, minimizando el desperdicio de material.
+RESTful API built with **Node.js** and **NestJS** to solve *2D Bin Packing* (Nesting) problems applied to leatherwork and the textile industry. It calculates the optimal distribution of rectangular molds on a canvas, minimizing material waste.
 
-Este repositorio es una **Prueba de Concepto (PoC)** centrada en el diseño del núcleo matemático y la arquitectura del dominio.
+This repository is a **Proof of Concept (PoC)** focused on the design of the mathematical core and domain architecture.
 
-## 🏛 Arquitectura y Patrones de Diseño
+## 🏛 Architecture & Design Patterns
 
-Este proyecto fue construido con un fuerte enfoque en la escalabilidad y mantenibilidad, aplicando **Arquitectura Hexagonal (Puertos y Adaptadores)** y principios **SOLID**:
+This project was built with a strong focus on scalability and maintainability, applying **Hexagonal Architecture (Ports and Adapters)** and **SOLID** principles:
 
-*   **Domain-Driven Design (DDD):** La lógica de negocio pura (modelos de piezas, lienzos y cálculo de *aspect ratio* para fuelles) está aislada en la capa de Dominio, sin dependencias de frameworks externos.
-*   **Strategy Pattern:** El motor matemático se implementa mediante la interfaz `INestingStrategy`. Actualmente utiliza un adaptador para `maxrects-packer`, pero permite inyectar fácilmente algoritmos de empaquetado de polígonos irregulares en el futuro sin modificar los casos de uso.
-*   **Dependency Injection:** Gestión de dependencias nativa de NestJS para desacoplar la infraestructura (controladores HTTP y librerías externas) de los casos de uso de la aplicación.
+*   **Domain-Driven Design (DDD):** Pure business logic (piece models, canvases, and *aspect ratio* calculation for bellows) is isolated in the Domain layer, with no dependencies on external frameworks.
+*   **Strategy Pattern:** The mathematical engine is implemented through the `INestingStrategy` interface. It currently uses an adapter for `maxrects-packer`, but allows easily injecting irregular polygon packing algorithms in the future without modifying use cases.
+*   **Dependency Injection:** Native NestJS dependency management to decouple infrastructure (HTTP controllers and external libraries) from application use cases.
 
-## 🚀 Instalación y Ejecución
+## 🚀 Installation & Setup
 
-**Prerrequisitos:** Node.js (v18+)
+**Prerequisites:** Node.js (v18+)
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/camilaebf/nesting2D.git
+# 1. Clone the repository
+git clone https://github.com/CamilaEBF/nesting2D.git
 cd nesting2D
 
-# 2. Instalar dependencias
+# 2. Install dependencies
 npm install
 
-# 3. Levantar el servidor en modo desarrollo
+# 3. Start the server in development mode
 npm run start:dev
 ```
 
-La API estará disponible en `http://localhost:3000`.
+The API will be available at `http://localhost:3000`.
 
-## 📖 Documentación de la API
+## 📖 API Documentation
 
-### Calcular Distribución Óptima
+### Calculate Optimal Distribution
 
-Calcula las coordenadas $(x, y)$ de cada molde para maximizar el uso del lienzo.
+Calculates the $(x, y)$ coordinates of each mold to maximize canvas usage.
 
 **Endpoint:** `POST /api/v1/nesting/calculate`
 
@@ -46,13 +46,13 @@ Calcula las coordenadas $(x, y)$ de cada molde para maximizar el uso del lienzo.
 
 ```json
 {
-  "lienzo": {
-    "ancho": 1500,
-    "alto": 1000
+  "canvas": {
+    "width": 1500,
+    "height": 1000
   },
-  "piezas": [
-    { "id": "panel-frontal", "ancho": 200, "alto": 300, "cantidad": 2, "permitirRotacion": true },
-    { "id": "fuelle-base", "ancho": 50, "alto": 800, "cantidad": 1, "permitirRotacion": false }
+  "pieces": [
+    { "id": "front-panel", "width": 200, "height": 300, "quantity": 2, "allowRotation": true },
+    { "id": "base-bellows", "width": 50, "height": 800, "quantity": 1, "allowRotation": false }
   ]
 }
 ```
@@ -63,26 +63,26 @@ Calcula las coordenadas $(x, y)$ de cada molde para maximizar el uso del lienzo.
 {
   "status": "success",
   "data": {
-    "lienzoUtilizado": {
-      "ancho": 1500,
-      "alto": 1000
+    "canvasUsed": {
+      "width": 1500,
+      "height": 1000
     },
-    "porcentajeUso": "10.67",
-    "distribucion": [
-      { "idPieza": "panel-frontal", "x": 0, "y": 0, "rotada": false },
-      { "idPieza": "panel-frontal", "x": 200, "y": 0, "rotada": false },
-      { "idPieza": "fuelle-base", "x": 0, "y": 300, "rotada": false }
+    "usagePercentage": "10.7",
+    "distribution": [
+      { "pieceId": "front-panel_1", "x": 0, "y": 0, "rotated": false, "finalWidth": 200, "finalHeight": 300 },
+      { "pieceId": "front-panel_2", "x": 200, "y": 0, "rotated": false, "finalWidth": 200, "finalHeight": 300 },
+      { "pieceId": "base-bellows", "x": 0, "y": 300, "rotated": false, "finalWidth": 50, "finalHeight": 800 }
     ],
-    "piezasNoUbicadas": []
+    "unplacedPieces": []
   }
 }
 ```
 
-## 🗺 Roadmap (Próximas Iteraciones)
+## 🗺 Roadmap (Next Iterations)
 
-Esta PoC es la base de un sistema integral de gestión de taller. Las próximas fases arquitectónicas incluyen:
+This PoC is the foundation for a comprehensive workshop management system. The upcoming architectural phases include:
 
-- [ ] **Persistencia Políglota:** Integración con **PostgreSQL** para manejo transaccional (ACID) del inventario de insumos (herrajes, metros de cierre) y **MongoDB** para almacenar los documentos complejos de los planos de corte.
-- [ ] **Offloading y Colas de Tareas:** Migración del cálculo matemático síncrono a un sistema de *Workers* asíncronos utilizando **Redis** y **BullMQ** (arquitectura orientada a eventos) para evitar el bloqueo del *Event Loop* ante lienzos complejos.
-- [ ] **Polígonos Irregulares:** Implementación de una nueva estrategia matemática para el aprovechamiento de lienzos con mermas previas (operaciones booleanas de geometría).
-- [ ] **Frontend Client:** Interfaz de usuario interactiva desarrollada en **React** con renderizado de planos en SVG.
+- [ ] **Polyglot Persistence:** Integration with **PostgreSQL** for transactional (ACID) management of supply inventory (hardware, zipper meters) and **MongoDB** to store complex cutting plan documents.
+- [ ] **Offloading & Task Queues:** Migration of synchronous mathematical calculation to an asynchronous *Workers* system using **Redis** and **BullMQ** (event-driven architecture) to prevent *Event Loop* blocking on complex canvases.
+- [ ] **Irregular Polygons:** Implementation of a new mathematical strategy for canvas utilization with previous waste (boolean geometry operations).
+- [ ] **Frontend Client:** Interactive user interface built with **React** featuring SVG plan rendering.

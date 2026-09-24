@@ -6,8 +6,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  // Habilitar ValidationPipe global como fallback
-  // (el controlador ya tiene su propio ValidationPipe configurado)
+  // Enable global ValidationPipe as fallback
+  // (the controller already has its own configured ValidationPipe)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -21,7 +21,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  logger.log(`🚀 Nesting 2D API corriendo en: http://localhost:${port}`);
+  logger.log(`🚀 Nesting 2D API running at: http://localhost:${port}`);
   logger.log(`📐 Endpoint: POST http://localhost:${port}/api/v1/nesting/calculate`);
 }
 await bootstrap();

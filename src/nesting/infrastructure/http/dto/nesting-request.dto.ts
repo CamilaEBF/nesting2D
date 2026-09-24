@@ -1,12 +1,12 @@
 /**
  * @file nesting-request.dto.ts
- * @description Data Transfer Objects para la capa HTTP del módulo Nesting.
+ * @description Data Transfer Objects for the Nesting module HTTP layer.
  *
- * Estos DTOs actúan como contratos de la API REST y utilizan class-validator
- * para asegurar que los datos de entrada cumplan con las restricciones de negocio
- * antes de llegar al caso de uso.
+ * These DTOs act as REST API contracts and use class-validator
+ * to ensure input data meets business constraints before
+ * reaching the use case.
  *
- * Capa: Infraestructura (Adaptador de entrada HTTP)
+ * Layer: Infrastructure (HTTP input adapter)
  */
 
 import {
@@ -23,100 +23,100 @@ import {
 import { Type } from 'class-transformer';
 
 /**
- * DTO para las dimensiones del lienzo (superficie de corte).
+ * DTO for canvas (cutting surface) dimensions.
  */
-export class LienzoDto {
+export class CanvasDto {
   /**
-   * Ancho del lienzo en unidades.
-   * Debe ser un número positivo mayor a 0.
+   * Canvas width in units.
+   * Must be a positive number greater than 0.
    */
-  @IsNumber({}, { message: 'El ancho del lienzo debe ser un número.' })
-  @IsPositive({ message: 'El ancho del lienzo debe ser mayor a 0.' })
-  ancho!: number;
+  @IsNumber({}, { message: 'Canvas width must be a number.' })
+  @IsPositive({ message: 'Canvas width must be greater than 0.' })
+  width!: number;
 
   /**
-   * Alto del lienzo en unidades.
-   * Debe ser un número positivo mayor a 0.
+   * Canvas height in units.
+   * Must be a positive number greater than 0.
    */
-  @IsNumber({}, { message: 'El alto del lienzo debe ser un número.' })
-  @IsPositive({ message: 'El alto del lienzo debe ser mayor a 0.' })
-  alto!: number;
+  @IsNumber({}, { message: 'Canvas height must be a number.' })
+  @IsPositive({ message: 'Canvas height must be greater than 0.' })
+  height!: number;
 }
 
 /**
- * DTO para cada pieza individual a ubicar en el lienzo.
+ * DTO for each individual piece to be placed on the canvas.
  */
-export class PiezaDto {
+export class PieceDto {
   /**
-   * Identificador único de la pieza.
-   * Requerido, debe ser un string no vacío.
+   * Unique piece identifier.
+   * Required, must be a non-empty string.
    */
-  @IsString({ message: 'El id de la pieza debe ser un string.' })
+  @IsString({ message: 'Piece id must be a string.' })
   id!: string;
 
   /**
-   * Ancho de la pieza en unidades.
-   * Debe ser un número positivo mayor a 0.
+   * Piece width in units.
+   * Must be a positive number greater than 0.
    */
-  @IsNumber({}, { message: 'El ancho de la pieza debe ser un número.' })
-  @IsPositive({ message: 'El ancho de la pieza debe ser mayor a 0.' })
-  ancho!: number;
+  @IsNumber({}, { message: 'Piece width must be a number.' })
+  @IsPositive({ message: 'Piece width must be greater than 0.' })
+  width!: number;
 
   /**
-   * Alto de la pieza en unidades.
-   * Debe ser un número positivo mayor a 0.
+   * Piece height in units.
+   * Must be a positive number greater than 0.
    */
-  @IsNumber({}, { message: 'El alto de la pieza debe ser un número.' })
-  @IsPositive({ message: 'El alto de la pieza debe ser mayor a 0.' })
-  alto!: number;
+  @IsNumber({}, { message: 'Piece height must be a number.' })
+  @IsPositive({ message: 'Piece height must be greater than 0.' })
+  height!: number;
 
   /**
-   * Cantidad de copias requeridas de esta pieza.
-   * Debe ser un entero mayor o igual a 1.
+   * Number of required copies of this piece.
+   * Must be an integer greater than or equal to 1.
    */
-  @IsNumber({}, { message: 'La cantidad debe ser un número.' })
-  @Min(1, { message: 'La cantidad debe ser al menos 1.' })
-  cantidad!: number;
+  @IsNumber({}, { message: 'Quantity must be a number.' })
+  @Min(1, { message: 'Quantity must be at least 1.' })
+  quantity!: number;
 
   /**
-   * Indica si la pieza puede rotarse 90° para optimizar el empaquetado.
-   * Valor por defecto: false.
+   * Whether the piece can be rotated 90° to optimize packing.
+   * Default value: false.
    */
-  @IsBoolean({ message: 'permitirRotacion debe ser un valor booleano.' })
+  @IsBoolean({ message: 'allowRotation must be a boolean value.' })
   @IsOptional()
-  permitirRotacion: boolean = false;
+  allowRotation: boolean = false;
 }
 
 /**
- * DTO principal para la solicitud de cálculo de nesting.
- * Contiene el lienzo y las piezas a empaquetar.
+ * Main DTO for the nesting calculation request.
+ * Contains the canvas and the pieces to pack.
  *
- * Ejemplo de payload:
+ * Example payload:
  * ```json
  * {
- *   "lienzo": { "ancho": 1500, "alto": 1000 },
- *   "piezas": [
- *     { "id": "p1", "ancho": 200, "alto": 300, "cantidad": 2, "permitirRotacion": true }
+ *   "canvas": { "width": 1500, "height": 1000 },
+ *   "pieces": [
+ *     { "id": "p1", "width": 200, "height": 300, "quantity": 2, "allowRotation": true }
  *   ]
  * }
  * ```
  */
 export class NestingRequestDto {
   /**
-   * Configuración del lienzo (superficie de corte).
-   * Debe ser un objeto válido con ancho y alto.
+   * Canvas (cutting surface) configuration.
+   * Must be a valid object with width and height.
    */
-  @ValidateNested({ message: 'El lienzo debe ser un objeto válido.' })
-  @Type(() => LienzoDto)
-  lienzo!: LienzoDto;
+  @ValidateNested({ message: 'Canvas must be a valid object.' })
+  @Type(() => CanvasDto)
+  canvas!: CanvasDto;
 
   /**
-   * Lista de piezas a empaquetar.
-   * Debe contener al menos 1 pieza.
+   * List of pieces to pack.
+   * Must contain at least 1 piece.
    */
-  @IsArray({ message: 'Las piezas deben ser un arreglo.' })
-  @ArrayMinSize(1, { message: 'Debe enviar al menos 1 pieza.' })
-  @ValidateNested({ each: true, message: 'Cada pieza debe ser un objeto válido.' })
-  @Type(() => PiezaDto)
-  piezas!: PiezaDto[];
+  @IsArray({ message: 'Pieces must be an array.' })
+  @ArrayMinSize(1, { message: 'At least 1 piece is required.' })
+  @ValidateNested({ each: true, message: 'Each piece must be a valid object.' })
+  @Type(() => PieceDto)
+  pieces!: PieceDto[];
 }

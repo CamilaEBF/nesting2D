@@ -1,16 +1,16 @@
 /**
  * @file nesting.module.ts
- * @description Módulo NestJS para el dominio de Nesting 2D.
+ * @description NestJS module for the 2D Nesting domain.
  *
- * Configura la inyección de dependencias siguiendo la Arquitectura Hexagonal:
- * - El token simbólico NESTING_STRATEGY_TOKEN (Puerto) se vincula a
- *   MaxRectsStrategyAdapter (Adaptador).
- * - El caso de uso recibe la estrategia inyectada automáticamente.
- * - El controlador HTTP se registra como punto de entrada.
+ * Configures dependency injection following Hexagonal Architecture:
+ * - The symbolic token NESTING_STRATEGY_TOKEN (Port) is bound to
+ *   MaxRectsStrategyAdapter (Adapter).
+ * - The use case receives the injected strategy automatically.
+ * - The HTTP controller is registered as the entry point.
  *
- * Para cambiar el motor de empaquetado, solo hay que reemplazar
- * `useClass: MaxRectsStrategyAdapter` por otro adaptador que implemente
- * NestingStrategy, sin tocar el caso de uso ni el controlador.
+ * To change the packing engine, simply replace
+ * `useClass: MaxRectsStrategyAdapter` with another adapter implementing
+ * NestingStrategy, without touching the use case or controller.
  */
 
 import { Module } from '@nestjs/common';
@@ -23,13 +23,13 @@ import { NestingController } from './infrastructure/http/nesting.controller.js';
   controllers: [NestingController],
   providers: [
     /**
-     * Vinculación del Puerto → Adaptador (Strategy Pattern via DI).
+     * Port → Adapter binding (Strategy Pattern via DI).
      *
-     * El token simbólico NESTING_STRATEGY_TOKEN es inyectado en
-     * CalculateNestingUseCase. NestJS resuelve este token con la
-     * clase MaxRectsStrategyAdapter.
+     * The symbolic token NESTING_STRATEGY_TOKEN is injected into
+     * CalculateNestingUseCase. NestJS resolves this token with the
+     * MaxRectsStrategyAdapter class.
      *
-     * Para usar un motor diferente (e.g., GuillotineStrategyAdapter):
+     * To use a different engine (e.g., GuillotineStrategyAdapter):
      *   { provide: NESTING_STRATEGY_TOKEN, useClass: GuillotineStrategyAdapter }
      */
     {
@@ -38,8 +38,8 @@ import { NestingController } from './infrastructure/http/nesting.controller.js';
     },
 
     /**
-     * Caso de uso como provider inyectable.
-     * Recibe automáticamente la estrategia de nesting vía constructor injection.
+     * Use case as an injectable provider.
+     * Automatically receives the nesting strategy via constructor injection.
      */
     CalculateNestingUseCase,
   ],

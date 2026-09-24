@@ -1,36 +1,36 @@
 /**
  * @file nesting-strategy.interface.ts
- * @description Puerto (Port) de la Arquitectura Hexagonal.
+ * @description Port of the Hexagonal Architecture.
  *
- * Define el contrato que cualquier motor de empaquetado rectangular debe cumplir.
- * Esto permite intercambiar la implementación concreta (MaxRects, Guillotine, etc.)
- * sin modificar la lógica de negocio (Caso de Uso).
+ * Defines the contract that any rectangular packing engine must fulfill.
+ * This allows swapping the concrete implementation (MaxRects, Guillotine, etc.)
+ * without modifying the business logic (Use Case).
  *
- * Patrón: Strategy / Puertos y Adaptadores
+ * Pattern: Strategy / Ports and Adapters
  */
 
 import type { Canvas, Piece, NestingResult } from '../entities/nesting-models.js';
 
 /**
- * Token de inyección de dependencias para NestJS.
- * Se utiliza como clave simbólica para resolver la implementación concreta
- * del adaptador de nesting en tiempo de ejecución.
+ * Dependency injection token for NestJS.
+ * Used as a symbolic key to resolve the concrete nesting
+ * adapter implementation at runtime.
  */
 export const NESTING_STRATEGY_TOKEN = Symbol('NESTING_STRATEGY');
 
 /**
- * Interfaz que define el contrato del motor de empaquetado 2D.
+ * Interface defining the contract for a 2D packing engine.
  *
- * Cualquier adaptador (MaxRects, Skyline, Shelf, etc.) debe implementar
- * este método para ser inyectable en el caso de uso.
+ * Any adapter (MaxRects, Skyline, Shelf, etc.) must implement
+ * this method to be injectable into the use case.
  */
 export interface NestingStrategy {
   /**
-   * Ejecuta el algoritmo de empaquetado 2D sobre un lienzo dado.
+   * Executes the 2D packing algorithm on a given canvas.
    *
-   * @param canvas - Dimensiones del lienzo (superficie de corte).
-   * @param pieces - Lista de piezas a ubicar, ya expandidas por cantidad.
-   * @returns Resultado del empaquetado con distribución y métricas.
+   * @param canvas - Canvas dimensions (cutting surface).
+   * @param pieces - List of pieces to place, already expanded by quantity.
+   * @returns Packing result with distribution and metrics.
    */
   calculate(canvas: Canvas, pieces: Piece[]): NestingResult;
 }
